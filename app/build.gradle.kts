@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.ogabek.mydicom"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -62,6 +62,11 @@ dependencies {
     implementation("androidx.camera:camera-view:$cameraxVersion")
     implementation("androidx.camera:camera-extensions:$cameraxVersion")
 
+    implementation("org.slf4j:slf4j-api:2.0.7")
+
     implementation(files("libs/imebrajni-release.aar"))
+
+    implementation(files("libs/dcm4che-core.jar", "libs/dcm4che-image.jar", "libs/dcm4che-imageio.jar", "libs/dcm4che-tool-jpg2dcm.jar"))
+    implementation(files("libs/pixelmed.jar"))
 
 }

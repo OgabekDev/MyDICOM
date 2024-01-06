@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -20,6 +21,7 @@ import androidx.concurrent.futures.await
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import dev.ogabek.mydicom.controller.DicomController
+import dev.ogabek.mydicom.controller.Jpg2Dcm
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.getData
 import kotlinx.coroutines.launch
@@ -111,8 +113,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePhotos() {
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+        var name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
+
+        name = "captured"
 
         val contextValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
@@ -122,8 +126,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val result = ByteArrayOutputStream()
-
         val outputOption = ImageCapture.OutputFileOptions
             .Builder(
                 contentResolver,
@@ -132,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             ).build()
 
         cameraCapture!!.takePicture(
-            ImageCapture.OutputFileOptions.Builder(result).build(),
+            outputOption,
             Executors.newSingleThreadExecutor(),
             object: ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
@@ -140,22 +142,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    val cache = File(externalCacheDir!!.absolutePath + "/" + "captured.jpg")
-                    try {
-                        FileOutputStream(cache).use { stream ->
-                            stream.write(result.toByteArray())
-                            Log.d(TAG, "onImageSaved: $cache")
+                    Log.d(TAG, outputFileResults.savedUri.toString())
 
-                            dicomController.convertImageToDicom(getData(), cache.absolutePath, externalCacheDir!!.absolutePath + "/" + "captured.dcm")
+                    val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/CameraX-Images/captured.jpg"
 
-                            Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                    Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
 
-                        }
-
-                    } catch (e: java.lang.Exception) {
-                        Log.e(TAG, "onImageSaved: Exception occurred", e)
-                    }
                 }
+
             }
         )
 
@@ -173,6 +167,7 @@ class MainActivity : AppCompatActivity() {
             ).apply {
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                     add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
             }.toTypedArray()
 

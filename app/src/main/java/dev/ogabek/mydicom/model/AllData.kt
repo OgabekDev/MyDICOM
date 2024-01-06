@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.UUID
+import kotlin.math.abs
+import kotlin.random.Random
 
 data class AllData(
     // IDs
@@ -41,10 +43,10 @@ data class AllData(
 @SuppressLint("SimpleDateFormat")
 fun getData(): AllData {
     return AllData(
-        UUID.randomUUID().toString().take(5),
-        UUID.randomUUID().toString().take(5),
-        UUID.randomUUID().toString().take(5),
-        UUID.randomUUID().toString().take(5),
+        abs(Random.nextInt()).toString(),
+        abs(Random.nextInt()).toString(),
+        abs(Random.nextInt()).toString(),
+        abs(Random.nextInt()).toString(),
         "Ben Wilson",
         "20040530",
         "M",
