@@ -16,7 +16,7 @@ data class AllData(
 
     // Patient
     val patientName: String,
-    val patientBirthDate: String,
+    val patientBirthDate: Date,
     val patientSex: String,
     val patientAge: Int,
 
@@ -48,7 +48,7 @@ fun getData(): AllData {
         abs(Random.nextInt()).toString(),
         abs(Random.nextInt()).toString(),
         "Ben Wilson",
-        "20040530",
+        Date(20040530),
         "M",
         20,
         "Steve Cons",

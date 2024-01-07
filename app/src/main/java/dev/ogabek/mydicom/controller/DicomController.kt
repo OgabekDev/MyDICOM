@@ -1,227 +1,129 @@
 package dev.ogabek.mydicom.controller
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import com.imebra.CodecFactory
-import com.imebra.DataSet
-import com.imebra.Image
-import com.imebra.TagId
-import com.imebra.bitDepth_t
-import com.imebra.codecType_t
-import com.imebra.imageQuality_t
 import dev.ogabek.mydicom.model.AllData
 import org.dcm4che3.data.Attributes
-import org.dcm4che3.data.ElementDictionary
 import org.dcm4che3.data.Tag
+import org.dcm4che3.data.UID
 import org.dcm4che3.data.VR
-import org.dcm4che3.imageio.codec.jpeg.JPEGParser
 import org.dcm4che3.io.DicomOutputStream
 import org.dcm4che3.util.UIDUtils
-import java.io.OutputStream
-import java.nio.ByteBuffer
-import java.nio.channels.ByteChannel
-import java.nio.channels.SeekableByteChannel
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
-//import android.graphics.BitmapFactory
-//import com.imebra.CodecFactory
-//import com.imebra.DataSet
-//import com.imebra.Image
-//import com.imebra.TagId
-//import com.imebra.bitDepth_t.*
-//import com.imebra.codecType_t
-//import com.imebra.imageQuality_t
-//import dev.ogabek.mydicom.model.AllData
-
-class DicomController2 {
-
-    fun convertImageToDicom(image: String, dicom: String) {
-
-        val bitmap = BitmapFactory.decodeFile(image)
-
-        val dataSet = DataSet()
-
-        dataSet.setString(TagId(0x0010, 0x0010), "Ogabek Matyakubov")
-        dataSet.setString(TagId(0x0010, 0x0020), "12345")
-
-        val dicomImage = Image(300, 200, bitDepth_t.depthU16, "RGB", 15)
-
-        val dataHandler = dicomImage.writingDataHandler
-
-        for (i in 0..200) {
-            for (j in 0..300) {
-                dataHandler.setUnsignedLong((i * bitmap.width.toLong() + j) * 3, 65536)
-                dataHandler.setUnsignedLong((i * bitmap.width.toLong() + j) * 3 + 1, 65536)
-                dataHandler.setUnsignedLong((i * bitmap.width.toLong() + j) * 3 + 2, 65536)
-            }
-        }
-
-        dataHandler.delete()
-
-        dataSet.setImage(0, dicomImage, imageQuality_t.medium)
-        CodecFactory.save(dataSet, dicom, codecType_t.dicom)
-
-    }
-
-    fun convertImageToDicom(data: AllData, image: String, dicom: String) {
-
-        val bitmap = BitmapFactory.decodeFile(image)
-
-        val dataSet = DataSet()
-
-        dataSet.setString(TagId(0x0010, 0x0010), "Ogabek Matyakubov")
-        dataSet.setString(TagId(0x0010, 0x0020), "12345")
-
-        val dicomImage = Image(bitmap.width.toLong(), bitmap.height.toLong(), bitDepth_t.depthU8, "RGB", 15)
-
-        dataSet.setImage(0, dicomImage, imageQuality_t.medium)
-
-        CodecFactory.save(dataSet, dicom, codecType_t.dicom)
-
-    }
-
-    fun convert(image: String, dicom: String) {
-        val dataSet = CodecFactory.load(image)
-
-        dataSet.setString(TagId(0x0010, 0x0010), "Ogabek Matyakubov")
-        dataSet.setString(TagId(0x0010, 0x0020), "12345")
-
-        CodecFactory.save(dataSet, dicom, codecType_t.dicom)
-
-    }
-
-}
-
+import java.io.BufferedInputStream
+import java.io.DataInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.util.Date
 
 class DicomController {
 
-    private var attribute = Attributes()
-    fun convertImageToDicom(data: AllData, image: String, dicom: String) {
+    private val attributes = Attributes()
 
-        attribute = Attributes()
+    fun convertImageToDicom(data: AllData, image: File, dicom: File) {
 
-        addInfo(Tag.StudyInstanceUID, VR.UI, UIDUtils.createUID())
-        addInfo(Tag.SeriesInstanceUID, VR.UI, UIDUtils.createUID())
-        addInfo(Tag.SOPInstanceUID, VR.UI, UIDUtils.createUID())
-        addInfo(Tag.SOPClassUID, VR.UI, UIDUtils.createUID())
-
-        addInfo(Tag.PatientID, data.patientID)
-        addInfo(Tag.StudyID, data.studyID)
-        addInfo(Tag.SeriesNumber, data.seriesID)
-        addInfo(Tag.InstanceNumber, data.instanceID)
-
-        addInfo(Tag.PatientName, data.patientName)
-        addInfo(Tag.PatientBirthDate, data.patientBirthDate)
-        addInfo(Tag.PatientSex, data.patientSex)
-        addInfo(Tag.PatientAge, data.patientAge.toString())
-
-        addInfo(Tag.PerformingPhysicianName, data.performingPhysicianName)
-        addInfo(Tag.ReferringPhysicianName, data.referringPhysicianName)
-        addInfo(Tag.InstitutionName, data.institutionName)
-        addInfo(Tag.InstitutionAddress, data.institutionAddress)
-        addInfo(Tag.Manufacturer, data.manufacturer)
-
-        addInfo(Tag.StudyDescription, data.studyDescription)
-        addInfo(Tag.SeriesDescription, data.seriesDescription)
-        addInfo(Tag.ContentDescription, data.contentDescription)
-        addInfo(Tag.StudyDate, data.studyDate)
-        addInfo(Tag.SeriesDate, data.seriesDate)
-        addInfo(Tag.ContentDate, data.contentDate)
-        addInfo(Tag.StudyTime, data.studyTime)
-        addInfo(Tag.SeriesTime, data.seriesTime)
-        addInfo(Tag.ContentTime, data.contentTime)
-
-        generateDicomFile(Paths.get(image, ""), Paths.get(dicom, ""))
-
-        Log.d("TAG", "convertImageToDicom: Done")
-
-    }
-
-    private fun addInfo(tag: Int, value: String) {
-        attribute.setString(tag, ElementDictionary.getElementDictionary("ogabekdev").vrOf(tag), value)
-    }
-
-//    private fun addInfo(tag: Int, value: Date) {
-//        attribute.setDate(tag, ElementDictionary.vrOf(tag, "ogabekdev"), value)
-//    }
-
-//    private fun addInfo(tag: Int, value: Int) {
-//        attribute.setInt(tag, ElementDictionary.vrOf(tag, "ogabekdev"), value)
-//    }
-
-    private fun addInfo(tag: Int, vr: VR, value: String) {
-        attribute.setString(tag, ElementDictionary.getElementDictionary("ogabekdev").vrOf(tag), value)
-    }
-    private fun generateDicomFile(imagePath: Path, dicomPath: Path) {
         try {
+            val fileLength = image.length().toInt()
 
-            val metaData = Attributes()
-            metaData.addAll(attribute)
+            val bitmapImage = BitmapFactory.decodeFile(image.absolutePath) ?: return
 
-            val channel = Files.newByteChannel(imagePath)
+            addInformation(data, bitmapImage)
 
-            val dicomOutputStream = DicomOutputStream(dicomPath.toFile())
+            val newAttribute = Attributes()
 
-            try {
-                val parser = JPEGParser(channel)
+            newAttribute.setString(Tag.ImplementationVersionName, VR.SH, "ImplementationVersionName")
+            newAttribute.setString(Tag.ImplementationClassUID, VR.UI, UIDUtils.createUID())
+            newAttribute.setString(Tag.TransferSyntaxUID, VR.UI, UID.JPEGLossless)
+            newAttribute.setString(Tag.MediaStorageSOPClassUID, VR.UI, UID.JPEGLossless)
+            newAttribute.setString(Tag.MediaStorageSOPInstanceUID, VR.UI, UIDUtils.createUID())
+            newAttribute.setInt(Tag.FileMetaInformationVersion, VR.OB, 1)
+            newAttribute.setInt(Tag.FileMetaInformationGroupLength, VR.UL, attributes.size() + newAttribute.size())
 
-                parser.getAttributes(metaData)
+            val dicomOutput = DicomOutputStream(dicom)
 
-                dicomOutputStream.writeDataset(metaData.createFileMetaInformation(parser.transferSyntaxUID), metaData)
-                dicomOutputStream.writeHeader(Tag.PixelData, VR.OB, -1)
-                dicomOutputStream.writeHeader(Tag.Item, null, 0)
+            dicomOutput.writeDataset(newAttribute, attributes)
+            dicomOutput.writeHeader(Tag.PixelData, VR.OB, -1)
+            dicomOutput.writeHeader(Tag.Item, null, 0)
+            dicomOutput.writeHeader(Tag.Item, null, fileLength + 1 and 1.inv())
 
-                writePixelToOutputStream(channel, parser.codeStreamPosition, dicomOutputStream)
+            val bufferedInput = BufferedInputStream(FileInputStream(image))
+            val dataInput = DataInputStream(bufferedInput)
 
-                dicomOutputStream.writeHeader(Tag.SequenceDelimitationItem, null, 0)
-
-                dicomOutputStream.close()
-
-                if (channel != null) {
-                    channel.close()
-                    return
-                }
-                return
-
-            } catch (e: Exception) {
-                channel?.close()
-                e.printStackTrace()
-                return
+            val buffer = ByteArray(65536)
+            var bytesRead: Int
+            while (dataInput.read(buffer).also { bytesRead = it } > 0) {
+                dicomOutput.write(buffer, 0, bytesRead)
             }
+
+            if (fileLength and 1 != 0)
+                dicomOutput.write(0)
+
+            dicomOutput.writeHeader(Tag.SequenceDelimitationItem, null, 0)
+
+            dicomOutput.close()
+
+            Log.d("DicomController", "Conversion Done")
+
         } catch (e: Exception) {
+            Log.e("DicomController", "Error occurred ${e.message}")
             e.printStackTrace()
-            return
         }
+
     }
 
-    private fun writePixelToOutputStream(
-        channel: SeekableByteChannel,
-        position: Long,
-        dicomOutputStream: DicomOutputStream
-    ) {
-        val size = channel.size() - position
-        dicomOutputStream.writeHeader(Tag.Item, null, ((size + 1) and -2).toInt())
-        channel.position(position)
-        write(channel, dicomOutputStream)
-        if ((1 and size.toInt()) != 0) {
-            dicomOutputStream.write(0)
-        }
-    }
+    private fun addInformation(data: AllData, bitmapImage: Bitmap) {
 
-    private fun write(enter: ByteChannel, output: OutputStream) {
-        val buffer = ByteBuffer.wrap(ByteArray(8162))
+        val colorComponent = if (bitmapImage.config == Bitmap.Config.ARGB_8888) 3 else 1
+        val bitsPerPixel = 8 * colorComponent
 
-        while (true) {
-            val read = enter.read(buffer)
-            if (read > 0) {
-                output.write(ByteArray(8162), 0, read)
-                buffer.clear()
-            } else {
-                return
-            }
-        }
+        attributes.setString(Tag.PatientID, VR.LO, data.patientID)
+        attributes.setString(Tag.StudyID, VR.SH, data.studyID)
+        attributes.setString(Tag.SeriesNumber, VR.IS, data.seriesID)
+        attributes.setString(Tag.InstanceNumber, VR.IS, data.instanceID)
+
+        attributes.setString(Tag.PatientName, VR.PN, data.patientName)
+        attributes.setDate(Tag.PatientBirthDate, VR.DA, data.patientBirthDate)
+        attributes.setString(Tag.PatientSex, VR.CS, data.patientSex)
+        attributes.setString(Tag.PatientAge, VR.AS, data.patientAge.toString())
+
+        attributes.setString(Tag.PerformingPhysicianName, VR.PN, data.performingPhysicianName)
+        attributes.setString(Tag.ReferringPhysicianName, VR.PN, data.referringPhysicianName)
+        attributes.setString(Tag.InstitutionName, VR.LO, data.institutionName)
+        attributes.setString(Tag.InstitutionAddress, VR.ST, data.institutionAddress)
+        attributes.setString(Tag.Manufacturer, VR.LO, data.manufacturer)
+        attributes.setString(Tag.ManufacturerModelName, VR.LO, data.manufacturer)
+
+        attributes.setString(Tag.StudyDescription, VR.LO, data.studyDescription)
+        attributes.setString(Tag.ContentDescription, VR.LO, data.contentDescription)
+        attributes.setString(Tag.SeriesDescription, VR.LO, data.seriesDescription)
+
+        attributes.setDate(Tag.StudyDescription, VR.DA, Date())
+        attributes.setDate(Tag.ContentDescription, VR.DA, Date())
+        attributes.setDate(Tag.SeriesDescription, VR.DA, Date())
+
+        attributes.setDate(Tag.StudyDescription, VR.TM, Date())
+        attributes.setDate(Tag.ContentDescription, VR.TM, Date())
+        attributes.setDate(Tag.SeriesDescription, VR.TM, Date())
+
+        attributes.setString(Tag.AccessionNumber, VR.SH, UIDUtils.createUID())
+        attributes.setString(Tag.Modality, VR.CS, "IMG")
+        attributes.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100")
+        attributes.setString(Tag.PhotometricInterpretation, VR.CS, if (colorComponent == 3) "YBR_FULL_422" else "MONOCHROME2")
+        attributes.setInt(Tag.SamplesPerPixel, VR.US, bitsPerPixel)
+        attributes.setInt(Tag.Rows, VR.US, bitmapImage.height)
+        attributes.setInt(Tag.Columns, VR.US, bitmapImage.width)
+        attributes.setInt(Tag.BitsAllocated, VR.US, bitsPerPixel)
+        attributes.setInt(Tag.BitsStored, VR.US, bitsPerPixel)
+        attributes.setInt(Tag.HighBit, VR.US, 11) // bitsPerPixel - 1
+        attributes.setInt(Tag.PixelRepresentation, VR.US, 0)
+        attributes.setDate(Tag.InstanceCreationDate, VR.DA, Date())
+        attributes.setDate(Tag.InstanceCreationTime, VR.TM, Date())
+
+        attributes.setString(Tag.SOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage)
+        attributes.setString(Tag.StudyInstanceUID, VR.UI, UIDUtils.createUID())
+        attributes.setString(Tag.SeriesInstanceUID, VR.UI, UIDUtils.createUID())
+        attributes.setString(Tag.SOPInstanceUID, VR.UI, UIDUtils.createUID())
+
     }
 
 }

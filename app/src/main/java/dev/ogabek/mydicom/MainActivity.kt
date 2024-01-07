@@ -25,9 +25,7 @@ import dev.ogabek.mydicom.controller.Jpg2Dcm
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.getData
 import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.Executors
@@ -146,12 +144,20 @@ class MainActivity : AppCompatActivity() {
 
                     val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/CameraX-Images/captured.jpg"
 
-                    Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
+                    DicomController().convertImageToDicom(getData(),  File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
+
+                    Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured2.dcm"))
 
                 }
 
             }
         )
+
+        val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/captured.jpg"
+
+        Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
+
+//        DicomController2().convert(file, externalCacheDir!!.absolutePath + "/" + "captured.dcm")
 
     }
 

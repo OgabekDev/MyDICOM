@@ -83,7 +83,7 @@ public class Jpg2Dcm {
     }
 
     private Attributes createDicomHeader(Bitmap jpegBitmap) {
-        // Determine color components, bits per pixel, bits allocated, and samples per pixel
+        // Determine color components, , bits allocated, and samples per pixel
         int colorComponents = jpegBitmap.getConfig().equals(Bitmap.Config.ARGB_8888) ? 3 : 1;
         int bitsPerPixel = 8 * colorComponents;
         int bitsAllocated = bitsPerPixel;
@@ -112,7 +112,7 @@ public class Jpg2Dcm {
         dicom.setDate(Tag.SeriesDate, VR.DA, new Date());
         dicom.setDate(Tag.SeriesTime, VR.TM, new Date());
         dicom.setString(Tag.SeriesDescription, VR.LO, "SINGLEFRAME SERIES");
-        dicom.setString(Tag.Modality, VR.CS, "SC"); // secondary capture
+        dicom.setString(Tag.Modality, VR.CS, "NU"); // secondary capture
 
         // Set various DICOM attributes
         dicom.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100");
