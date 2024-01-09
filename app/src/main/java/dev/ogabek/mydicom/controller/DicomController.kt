@@ -97,16 +97,16 @@ class DicomController {
         attributes.setString(Tag.ContentDescription, VR.LO, data.contentDescription)
         attributes.setString(Tag.SeriesDescription, VR.LO, data.seriesDescription)
 
-        attributes.setDate(Tag.StudyDescription, VR.DA, Date())
-        attributes.setDate(Tag.ContentDescription, VR.DA, Date())
-        attributes.setDate(Tag.SeriesDescription, VR.DA, Date())
+        attributes.setDate(Tag.StudyDate, VR.DA, Date())
+        attributes.setDate(Tag.ContentDate, VR.DA, Date())
+        attributes.setDate(Tag.SeriesDate, VR.DA, Date())
 
-        attributes.setDate(Tag.StudyDescription, VR.TM, Date())
-        attributes.setDate(Tag.ContentDescription, VR.TM, Date())
-        attributes.setDate(Tag.SeriesDescription, VR.TM, Date())
+        attributes.setDate(Tag.StudyTime, VR.TM, Date())
+        attributes.setDate(Tag.ContentTime, VR.TM, Date())
+        attributes.setDate(Tag.SeriesTime, VR.TM, Date())
 
         attributes.setString(Tag.AccessionNumber, VR.SH, UIDUtils.createUID())
-        attributes.setString(Tag.Modality, VR.CS, "IMG")
+        attributes.setString(Tag.Modality, VR.CS, "SC")
         attributes.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100")
         attributes.setString(Tag.PhotometricInterpretation, VR.CS, if (colorComponent == 3) "YBR_FULL_422" else "MONOCHROME2")
         attributes.setInt(Tag.SamplesPerPixel, VR.US, bitsPerPixel)

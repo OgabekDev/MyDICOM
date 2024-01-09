@@ -3,9 +3,6 @@ package dev.ogabek.mydicom.model
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.UUID
-import kotlin.math.abs
-import kotlin.random.Random
 
 data class AllData(
     // IDs
@@ -43,10 +40,10 @@ data class AllData(
 @SuppressLint("SimpleDateFormat")
 fun getData(): AllData {
     return AllData(
-        abs(Random.nextInt()).toString(),
-        abs(Random.nextInt()).toString(),
-        abs(Random.nextInt()).toString(),
-        abs(Random.nextInt()).toString(),
+        "2040530",//abs(Random.nextInt()).toString(),
+        "2040530",//abs(Random.nextInt()).toString(),
+        "2040530",//abs(Random.nextInt()).toString(),
+        "2040530",//abs(Random.nextInt()).toString(),
         "Ben Wilson",
         Date(20040530),
         "M",

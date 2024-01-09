@@ -64,9 +64,9 @@ dependencies {
 
     implementation("org.slf4j:slf4j-api:2.0.7")
 
-    implementation(files("libs/imebrajni-release.aar"))
+//    implementation(files("libs/imebrajni-release.aar"))
 
-    implementation(files("libs/dcm4che-core.jar", "libs/dcm4che-image.jar", "libs/dcm4che-imageio.jar", "libs/dcm4che-tool-jpg2dcm.jar"))
-    implementation(files("libs/pixelmed.jar"))
+    implementation(files("libs/dcm4che-core.jar", "libs/dcm4che-image.jar", "libs/dcm4che-imageio.jar", "libs/dcm4che-tool-jpg2dcm.jar", "libs/dcm4che-emf.jar"))
+//    implementation(files("libs/pixelmed.jar"))
 
 }

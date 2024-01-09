@@ -16,12 +16,10 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.LifecycleCameraController
 import androidx.concurrent.futures.await
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import dev.ogabek.mydicom.controller.DicomController
-import dev.ogabek.mydicom.controller.Jpg2Dcm
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.getData
 import kotlinx.coroutines.launch
@@ -33,9 +31,8 @@ import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var viewBinding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
-    private lateinit var cameraController: LifecycleCameraController
     private var cameraCapture: ImageCapture? = null
 
     private lateinit var dicomController: DicomController
@@ -43,11 +40,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
 
-        viewBinding.btnTakePhoto.setOnClickListener { takePhotos() }
+        binding.btnTakePhoto.setOnClickListener { takePhotos() }
 
-        setContentView(viewBinding.root)
+        setContentView(binding.root)
 
         if (!hasPermissions(baseContext)) {
             activityResultLauncher.launch(REQUIRED_PERMISSIONS)
@@ -65,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         val cameraProvider = ProcessCameraProvider.getInstance(this).await()
 
         val preview = Preview.Builder().build()
-        preview.setSurfaceProvider(viewBinding.myCameraPreview.surfaceProvider)
+        preview.setSurfaceProvider(binding.myCameraPreview.surfaceProvider)
 
         cameraCapture = ImageCapture.Builder().build()
 
@@ -73,7 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         try {
             cameraProvider.unbindAll()
-            val camera = cameraProvider.bindToLifecycle(
+            cameraProvider.bindToLifecycle(
                 this,
                 cameraSelector,
                 preview,
@@ -100,27 +97,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCameraWithCameraController() {
-        val previewView = viewBinding.myCameraPreview
-        cameraController = LifecycleCameraController(baseContext)
-        cameraController.bindToLifecycle(this)
-
-        cameraController.cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-        previewView.controller = cameraController
-    }
-
     private fun takePhotos() {
-        var name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
-
-        name = "captured"
 
         val contextValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Images")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Dicom-Images")
             }
         }
 
@@ -131,7 +116,7 @@ class MainActivity : AppCompatActivity() {
                 contextValues
             ).build()
 
-        cameraCapture!!.takePicture(
+        for (i in 1..5) cameraCapture!!.takePicture(
             outputOption,
             Executors.newSingleThreadExecutor(),
             object: ImageCapture.OnImageSavedCallback {
@@ -141,23 +126,16 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     Log.d(TAG, outputFileResults.savedUri.toString())
+                    Log.i("Take Picture", "onImageSaved: $i")
 
-                    val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/CameraX-Images/captured.jpg"
+                    val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/Dicom-Images/$name.jpg"
 
-                    DicomController().convertImageToDicom(getData(),  File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
-
-                    Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured2.dcm"))
+                    DicomController().convertImageToDicom(getData(),  File(file), File(externalCacheDir!!.absolutePath + "/" + "$i.dcm"))
 
                 }
 
             }
         )
-
-        val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/captured.jpg"
-
-        Jpg2Dcm(File(file), File(externalCacheDir!!.absolutePath + "/" + "captured.dcm"))
-
-//        DicomController2().convert(file, externalCacheDir!!.absolutePath + "/" + "captured.dcm")
 
     }
 
