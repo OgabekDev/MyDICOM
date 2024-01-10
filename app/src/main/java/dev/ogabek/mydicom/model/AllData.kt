@@ -19,21 +19,12 @@ data class AllData(
 
     // Doctor
     val performingPhysicianName: String,
-    val referringPhysicianName: String,
     val institutionName: String,
     val institutionAddress: String,
     val manufacturer: String,
 
     // Picture
-    val studyDescription: String,
-    val seriesDescription: String,
-    val contentDescription: String,
-    val studyDate: String,
-    val seriesDate: String,
-    val contentDate: String,
-    val studyTime: String,
-    val seriesTime: String,
-    val contentTime: String
+    val description: String,
 
 )
 
@@ -49,18 +40,9 @@ fun getData(): AllData {
         "M",
         20,
         "Steve Cons",
-        "Steve Cons",
         "Geo2 IUT Global",
         "Ziyolilar 13",
         "Tech A Pro",
-        "Patinent is in a good condition",
-        "Patinent is in a good condition",
-        "Patinent is in a good condition",
-        SimpleDateFormat("yyyyMMdd").format(Date()),
-        SimpleDateFormat("yyyyMMdd").format(Date()),
-        SimpleDateFormat("yyyyMMdd").format(Date()),
-        SimpleDateFormat("HHmmss.SSS").format(Date()),
-        SimpleDateFormat("HHmmss.SSS").format(Date()),
-        SimpleDateFormat("HHmmss.SSS").format(Date())
+        "Patinent is in a good condition"
     )
 }

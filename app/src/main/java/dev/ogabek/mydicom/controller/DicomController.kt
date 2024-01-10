@@ -10,55 +10,56 @@ import org.dcm4che3.data.UID
 import org.dcm4che3.data.VR
 import org.dcm4che3.io.DicomOutputStream
 import org.dcm4che3.util.UIDUtils
-import java.io.BufferedInputStream
-import java.io.DataInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.util.Date
+import java.util.UUID
 
 class DicomController {
 
     private val attributes = Attributes()
 
-    fun convertImageToDicom(data: AllData, image: File, dicom: File) {
+    fun convertImageToDicom(data: AllData, images: List<File>, dicom: File) {
 
         try {
-            val fileLength = image.length().toInt()
 
-            val bitmapImage = BitmapFactory.decodeFile(image.absolutePath) ?: return
+            val bitmapImage = BitmapFactory.decodeFile(images[0].absolutePath) ?: return
 
-            addInformation(data, bitmapImage)
+            addInformation(data, bitmapImage, images.size)
 
             val newAttribute = Attributes()
 
             newAttribute.setString(Tag.ImplementationVersionName, VR.SH, "ImplementationVersionName")
             newAttribute.setString(Tag.ImplementationClassUID, VR.UI, UIDUtils.createUID())
-            newAttribute.setString(Tag.TransferSyntaxUID, VR.UI, UID.JPEGLossless)
-            newAttribute.setString(Tag.MediaStorageSOPClassUID, VR.UI, UID.JPEGLossless)
+            newAttribute.setString(Tag.TransferSyntaxUID, VR.UI, UID.ExplicitVRLittleEndian)
+            newAttribute.setString(Tag.MediaStorageSOPClassUID, VR.UI, UIDUtils.createUID())
             newAttribute.setString(Tag.MediaStorageSOPInstanceUID, VR.UI, UIDUtils.createUID())
             newAttribute.setInt(Tag.FileMetaInformationVersion, VR.OB, 1)
             newAttribute.setInt(Tag.FileMetaInformationGroupLength, VR.UL, attributes.size() + newAttribute.size())
 
+            var pixelData: ByteArray? = null
+
+            for (i in images) {
+                val bitmap = BitmapFactory.decodeFile(i.absolutePath)
+
+                val tempBytes = bitmapToRGB(bitmap)
+
+                pixelData = if (pixelData == null) {
+                    tempBytes
+                } else {
+                    val newByteArray = ByteArray(pixelData.size + tempBytes.size)
+                    System.arraycopy(pixelData, 0, newByteArray, 0, pixelData.size)
+                    System.arraycopy(tempBytes, 0, newByteArray, pixelData.size, tempBytes.size)
+                    newByteArray
+                }
+
+            }
+
+            attributes.setBytes(Tag.PixelData, VR.OB, pixelData)
+
+
             val dicomOutput = DicomOutputStream(dicom)
 
             dicomOutput.writeDataset(newAttribute, attributes)
-            dicomOutput.writeHeader(Tag.PixelData, VR.OB, -1)
-            dicomOutput.writeHeader(Tag.Item, null, 0)
-            dicomOutput.writeHeader(Tag.Item, null, fileLength + 1 and 1.inv())
-
-            val bufferedInput = BufferedInputStream(FileInputStream(image))
-            val dataInput = DataInputStream(bufferedInput)
-
-            val buffer = ByteArray(65536)
-            var bytesRead: Int
-            while (dataInput.read(buffer).also { bytesRead = it } > 0) {
-                dicomOutput.write(buffer, 0, bytesRead)
-            }
-
-            if (fileLength and 1 != 0)
-                dicomOutput.write(0)
-
-            dicomOutput.writeHeader(Tag.SequenceDelimitationItem, null, 0)
 
             dicomOutput.close()
 
@@ -71,10 +72,10 @@ class DicomController {
 
     }
 
-    private fun addInformation(data: AllData, bitmapImage: Bitmap) {
+    private fun addInformation(data: AllData, bitmapImage: Bitmap, frames: Int) {
 
         val colorComponent = if (bitmapImage.config == Bitmap.Config.ARGB_8888) 3 else 1
-        val bitsPerPixel = 8 * colorComponent
+        val bitsPerPixel = 8// * colorComponent
 
         attributes.setString(Tag.PatientID, VR.LO, data.patientID)
         attributes.setString(Tag.StudyID, VR.SH, data.studyID)
@@ -87,15 +88,15 @@ class DicomController {
         attributes.setString(Tag.PatientAge, VR.AS, data.patientAge.toString())
 
         attributes.setString(Tag.PerformingPhysicianName, VR.PN, data.performingPhysicianName)
-        attributes.setString(Tag.ReferringPhysicianName, VR.PN, data.referringPhysicianName)
+        attributes.setString(Tag.ReferringPhysicianName, VR.PN, data.performingPhysicianName)
         attributes.setString(Tag.InstitutionName, VR.LO, data.institutionName)
         attributes.setString(Tag.InstitutionAddress, VR.ST, data.institutionAddress)
         attributes.setString(Tag.Manufacturer, VR.LO, data.manufacturer)
         attributes.setString(Tag.ManufacturerModelName, VR.LO, data.manufacturer)
 
-        attributes.setString(Tag.StudyDescription, VR.LO, data.studyDescription)
-        attributes.setString(Tag.ContentDescription, VR.LO, data.contentDescription)
-        attributes.setString(Tag.SeriesDescription, VR.LO, data.seriesDescription)
+        attributes.setString(Tag.StudyDescription, VR.LO, data.description)
+        attributes.setString(Tag.ContentDescription, VR.LO, data.description)
+        attributes.setString(Tag.SeriesDescription, VR.LO, data.description)
 
         attributes.setDate(Tag.StudyDate, VR.DA, Date())
         attributes.setDate(Tag.ContentDate, VR.DA, Date())
@@ -106,16 +107,17 @@ class DicomController {
         attributes.setDate(Tag.SeriesTime, VR.TM, Date())
 
         attributes.setString(Tag.AccessionNumber, VR.SH, UIDUtils.createUID())
-        attributes.setString(Tag.Modality, VR.CS, "SC")
-        attributes.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100")
-        attributes.setString(Tag.PhotometricInterpretation, VR.CS, if (colorComponent == 3) "YBR_FULL_422" else "MONOCHROME2")
+//        attributes.setString(Tag.Modality, VR.CS, "SC")
+//        attributes.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100")
+        attributes.setString(Tag.PhotometricInterpretation, VR.CS, "RGB")
         attributes.setInt(Tag.SamplesPerPixel, VR.US, bitsPerPixel)
-        attributes.setInt(Tag.Rows, VR.US, bitmapImage.height)
-        attributes.setInt(Tag.Columns, VR.US, bitmapImage.width)
+//        attributes.setInt(Tag.Rows, VR.US, bitmapImage.height)
+//        attributes.setInt(Tag.Columns, VR.US, bitmapImage.width)
         attributes.setInt(Tag.BitsAllocated, VR.US, bitsPerPixel)
         attributes.setInt(Tag.BitsStored, VR.US, bitsPerPixel)
-        attributes.setInt(Tag.HighBit, VR.US, 11) // bitsPerPixel - 1
+        attributes.setInt(Tag.HighBit, VR.US, 7) // bitsPerPixel - 1
         attributes.setInt(Tag.PixelRepresentation, VR.US, 0)
+        attributes.setInt(Tag.NumberOfFrames, VR.IS, frames)
         attributes.setDate(Tag.InstanceCreationDate, VR.DA, Date())
         attributes.setDate(Tag.InstanceCreationTime, VR.TM, Date())
 
@@ -124,6 +126,20 @@ class DicomController {
         attributes.setString(Tag.SeriesInstanceUID, VR.UI, UIDUtils.createUID())
         attributes.setString(Tag.SOPInstanceUID, VR.UI, UIDUtils.createUID())
 
+    }
+
+    private fun bitmapToRGB(bitmap: Bitmap): ByteArray {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        val data = ByteArray(width * height * 3)
+        for (i in pixels.indices) {
+            data[i * 3] = (pixels[i] shr 16 and 255).toByte()
+            data[i * 3 + 1] = (pixels[i] shr 8 and 255).toByte()
+            data[i * 3 + 2] = (pixels[i] and 255).toByte()
+        }
+        return data
     }
 
 }

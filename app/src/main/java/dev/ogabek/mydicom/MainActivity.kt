@@ -1,128 +1,172 @@
 package dev.ogabek.mydicom
 
-import android.content.ContentValues
+import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
+import dev.ogabek.mydicom.adapter.MyAdapter
 import dev.ogabek.mydicom.controller.DicomController
 import dev.ogabek.mydicom.controller.PermissionController
+import dev.ogabek.mydicom.controller.SharedPref
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
+import dev.ogabek.mydicom.model.Dicom
 import dev.ogabek.mydicom.model.getData
+import dev.ogabek.mydicom.utils.getFileFromUri
+import dev.ogabek.mydicom.utils.getFileSize
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.concurrent.Executors
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity() {
 
+    private val TAG = "My DICOM Application TAG"
+
     private lateinit var binding: ActivityMainBinding
+    private lateinit var pref: SharedPref
 
-    private var cameraCapture: ImageCapture? = null
-
-    private lateinit var dicomController: DicomController
     private lateinit var permissionController: PermissionController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
 
+        initViews()
+
         setContentView(binding.root)
+
+    }
+
+    private val onClick = { it: String ->
+
+        val file = File(it)
+
+        if (!file.exists()) {
+            Toast.makeText(this, "No File exist, removed from list", Toast.LENGTH_SHORT).show()
+            pref.deletePath(it)
+            setAdapter()
+        }
+
+        if (file.extension != "dcm") {
+            Toast.makeText(this, "This is not dicom file, removed from list", Toast.LENGTH_SHORT)
+                .show()
+            pref.deletePath(it)
+            setAdapter()
+        }
+//
+        val intent = Intent(this, DicomViewerActivity::class.java)
+        intent.putExtra("dicomPath", it)
+        startActivity(intent)
+
+    }
+
+    private val onDelete = { it: String ->
+        pref.deletePath(it)
+        setAdapter()
+    }
+
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "*/*"  // Allow any file type
+
+        startActivityForResult(intent, 1)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            data?.data?.let {
+                val file = getFileFromUri(this, it)!!
+                if (file.extension != "dcm") {
+                    Toast.makeText(this, "This is not dicom file", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                pref.addPath(getFileFromUri(this, it)!!.absolutePath)
+                setAdapter()
+                Log.d(TAG, "onActivityResult: ")
+            }
+        }
+    }
+
+    private fun initViews() {
+
+        pref = SharedPref(this)
 
         permissionController = PermissionController(this, 777)
 
         if (!permissionController.checkPermission()) {
-            permissionController.askPermission {
-//                if (!it) permissionController.openSettingsForPermission()
-            }
+            permissionController.askPermission {}
         }
+
+        binding.rvDicomFiles.layoutManager = LinearLayoutManager(this, VERTICAL, false)
+        setAdapter()
 
         binding.btnCreate.setOnClickListener {
 
-        }
+            try {
+                val images = ArrayList<File>().apply {
+                    repeat(5) {
+                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
+                    }
+                }
 
-    }
+                val data = getData()
+                var dicom = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
+                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
 
-    private fun takePhotos() {
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
+                DicomController().convertImageToDicom(data, images, File(dicom))
 
-        val contextValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Dicom-Images")
+                pref.addPath(dicom)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                setAdapter()
             }
         }
 
-        val outputOption = ImageCapture.OutputFileOptions
-            .Builder(
-                contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contextValues
-            ).build()
-
-        for (i in 1..5) cameraCapture!!.takePicture(
-            outputOption,
-            Executors.newSingleThreadExecutor(),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exception: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exception.message}", exception)
-                }
-
-                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Log.d(TAG, outputFileResults.savedUri.toString())
-                    Log.i("Take Picture", "onImageSaved: $i")
-
-                    val file =
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/Dicom-Images/$name.jpg"
-
-                    DicomController().convertImageToDicom(
-                        getData(),
-                        File(file),
-                        File(externalCacheDir!!.absolutePath + "/" + "$i.dcm")
-                    )
-
-                }
-
+        binding.btnOpen.setOnClickListener {
+            if (permissionController.checkPermissionStorage()) {
+                permissionController.openSettingsForPermission()
+                return@setOnClickListener
             }
-        )
-
-    }
-
-    companion object {
-
-        private const val TAG = "My DICOM Application TAG"
-
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-
-        private val REQUIRED_PERMISSIONS =
-            mutableListOf(
-                android.Manifest.permission.CAMERA
-            ).apply {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                    add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                }
-            }.toTypedArray()
-
-        fun hasPermissions(context: Context) = REQUIRED_PERMISSIONS.all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+            openFilePicker()
         }
 
     }
 
-    fun getDicomFiles(context: Context): List<File> {
-        val dcmFiles = ArrayList<File>()
+    private fun setAdapter() {
+        binding.rvDicomFiles.adapter = MyAdapter(this, getDicomFiles(), onClick, onDelete)
+    }
+
+    private fun getDicomFiles(): List<Dicom> {
+        val dcmFiles = ArrayList<Dicom>()
+
+        val files = pref.getPaths()
+
+        for (i in files) {
+            val file = File(i)
+            dcmFiles.add(
+                Dicom(
+                    File(i).absolutePath,
+                    file.name,
+                    file.extension,
+                    getFileSize(file)
+                )
+            )
+        }
 
         return dcmFiles
     }

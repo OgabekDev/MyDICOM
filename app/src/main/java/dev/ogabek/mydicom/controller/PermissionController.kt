@@ -29,6 +29,17 @@ class PermissionController(private val context: Context, private val requestCode
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun checkPermissionStorage(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            readStoragePermission
+        ) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    writeStoragePermission
+                ) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun askPermission(result: (Boolean) -> Unit) {
         if (!checkPermission()) {
             ActivityCompat.requestPermissions(
