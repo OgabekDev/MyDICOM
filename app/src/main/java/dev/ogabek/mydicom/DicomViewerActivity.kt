@@ -4,11 +4,11 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dev.ogabek.mydicom.databinding.ActivityDicomViewerBinding
 import dev.ogabek.mydicom.model.AllData
+import dev.ogabek.mydicom.utils.CustomSheet
 import org.dcm4che3.data.Tag
 import org.dcm4che3.io.DicomInputStream
 import java.io.File
 import java.util.Date
-
 
 class DicomViewerActivity : AppCompatActivity() {
 
@@ -29,6 +29,14 @@ class DicomViewerActivity : AppCompatActivity() {
         val dicomPath = intent.getStringExtra("dicomPath") ?: ""
 
         getAllDataFromDicom(dicomPath)
+
+        binding.btnInfo.setOnClickListener {
+            val sheet = CustomSheet()
+
+            sheet.show(this) {
+
+            }
+        }
 
     }
 

@@ -20,7 +20,7 @@ class SharedPref(context: Context) {
 
         dicomList.add(path)
 
-        val json = Gson().toJson(dicomList)
+        val json = Gson().toJson(dicomList.toSet())
 
         pref
             .edit()

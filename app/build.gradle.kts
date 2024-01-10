@@ -70,5 +70,6 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.maxkeppeler.sheets:core:2.3.1")
 
 }

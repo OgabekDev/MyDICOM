@@ -24,7 +24,8 @@ class DicomController {
 
             val bitmapImage = BitmapFactory.decodeFile(images[0].absolutePath) ?: return
 
-            addInformation(data, bitmapImage, images.size)
+//            addInformation(data, bitmapImage, images.size)
+            addInformation(data, bitmapImage, 1)
 
             val newAttribute = Attributes()
 
@@ -38,8 +39,8 @@ class DicomController {
 
             var pixelData: ByteArray? = null
 
-            for (i in images) {
-                val bitmap = BitmapFactory.decodeFile(i.absolutePath)
+//            for (i in images) {
+                val bitmap = BitmapFactory.decodeFile(images.first().absolutePath)
 
                 val tempBytes = bitmapToRGB(bitmap)
 
@@ -51,8 +52,8 @@ class DicomController {
                     System.arraycopy(tempBytes, 0, newByteArray, pixelData.size, tempBytes.size)
                     newByteArray
                 }
-
-            }
+//
+//            }
 
             attributes.setBytes(Tag.PixelData, VR.OB, pixelData)
 

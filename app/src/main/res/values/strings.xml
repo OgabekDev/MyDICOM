@@ -8,4 +8,23 @@
     <string name="str_file_pictures">5 Pictures</string>
     <string name="str_file_modality">MR</string>
     <string name="ben_wilson">Ben Wilson</string>
+    <string name="str_patient_info">Patient Information</string>
+    <string name="str_patient_name">Patient Name</string>
+    <string name="str_patient_age">Patient Age</string>
+    <string name="_20">20</string>
+    <string name="str_patient_birthday">Patient Birthday</string>
+    <string name="birthday">30 May 2004</string>
+    <string name="str_patient_sex">Patient Sex</string>
+    <string name="male">Male</string>
+    <string name="dicom_info">Dicom Infomations</string>
+    <string name="str_doctor_and_hospital">Doctor and Hospital Information</string>
+    <string name="str_doctor_name">Doctor name</string>
+    <string name="str_hospital">Hospital</string>
+    <string name="str_hospital_name">MIRU SYSTEMS CO., LTD</string>
+    <string name="hospital_address">Hospital Address</string>
+    <string name="str_hospital_address">Inchon A1, B2</string>
+    <string name="manufacturer">iPhone 13 Pro</string>
+    <string name="str_manufacturer">Manufacturer</string>
+    <string name="str_other_information">Other Informations</string>
+    <string name="str_description">Patient Description</string>
 </resources>

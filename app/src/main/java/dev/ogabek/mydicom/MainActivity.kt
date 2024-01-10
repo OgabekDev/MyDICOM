@@ -1,16 +1,11 @@
 package dev.ogabek.mydicom
 
-import android.content.ContentResolver
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import dev.ogabek.mydicom.adapter.MyAdapter
@@ -23,9 +18,6 @@ import dev.ogabek.mydicom.model.getData
 import dev.ogabek.mydicom.utils.getFileFromUri
 import dev.ogabek.mydicom.utils.getFileSize
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -51,18 +43,18 @@ class MainActivity : AppCompatActivity() {
 
         val file = File(it)
 
-        if (!file.exists()) {
-            Toast.makeText(this, "No File exist, removed from list", Toast.LENGTH_SHORT).show()
-            pref.deletePath(it)
-            setAdapter()
-        }
-
-        if (file.extension != "dcm") {
-            Toast.makeText(this, "This is not dicom file, removed from list", Toast.LENGTH_SHORT)
-                .show()
-            pref.deletePath(it)
-            setAdapter()
-        }
+//        if (!file.exists()) {
+//            Toast.makeText(this, "No File exist, removed from list", Toast.LENGTH_SHORT).show()
+//            pref.deletePath(it)
+//            setAdapter()
+//        }
+//
+//        if (file.extension != "dcm") {
+//            Toast.makeText(this, "This is not dicom file, removed from list", Toast.LENGTH_SHORT)
+//                .show()
+//            pref.deletePath(it)
+//            setAdapter()
+//        }
 //
         val intent = Intent(this, DicomViewerActivity::class.java)
         intent.putExtra("dicomPath", it)
@@ -90,10 +82,10 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1 && resultCode == RESULT_OK) {
             data?.data?.let {
                 val file = getFileFromUri(this, it)!!
-                if (file.extension != "dcm") {
-                    Toast.makeText(this, "This is not dicom file", Toast.LENGTH_SHORT).show()
-                    return
-                }
+//                if (file.extension != "dcm") {
+//                    Toast.makeText(this, "This is not dicom file", Toast.LENGTH_SHORT).show()
+//                    return
+//                }
                 pref.addPath(getFileFromUri(this, it)!!.absolutePath)
                 setAdapter()
                 Log.d(TAG, "onActivityResult: ")
@@ -124,7 +116,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val data = getData()
-                var dicom = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
+                var dicom =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
                 dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
 
                 DicomController().convertImageToDicom(data, images, File(dicom))
