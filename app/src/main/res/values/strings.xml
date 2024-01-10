@@ -3,4 +3,8 @@
 
     <string name="take_photo">Take Photos</string>
     <string name="permission_denied">Permission request denied</string>
+    <string name="str_name_file">Name of dicom file</string>
+    <string name="str_file_size">16.3 MB</string>
+    <string name="str_file_pictures">5 Pictures</string>
+    <string name="str_file_modality">MR</string>
 </resources>

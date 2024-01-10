@@ -8,21 +8,14 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.concurrent.futures.await
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import dev.ogabek.mydicom.controller.DicomController
+import dev.ogabek.mydicom.controller.PermissionController
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.getData
-import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -36,65 +29,27 @@ class MainActivity : AppCompatActivity() {
     private var cameraCapture: ImageCapture? = null
 
     private lateinit var dicomController: DicomController
+    private lateinit var permissionController: PermissionController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
 
-        binding.btnTakePhoto.setOnClickListener { takePhotos() }
-
         setContentView(binding.root)
 
-        if (!hasPermissions(baseContext)) {
-            activityResultLauncher.launch(REQUIRED_PERMISSIONS)
-        } else {
-            lifecycleScope.launch {
-                startCameraWithCameraCapture()
+        permissionController = PermissionController(this, 777)
+
+        if (!permissionController.checkPermission()) {
+            permissionController.askPermission {
+//                if (!it) permissionController.openSettingsForPermission()
             }
         }
 
-        dicomController = DicomController()
+        binding.btnCreate.setOnClickListener {
 
-    }
-
-    private suspend fun startCameraWithCameraCapture() {
-        val cameraProvider = ProcessCameraProvider.getInstance(this).await()
-
-        val preview = Preview.Builder().build()
-        preview.setSurfaceProvider(binding.myCameraPreview.surfaceProvider)
-
-        cameraCapture = ImageCapture.Builder().build()
-
-        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-        try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                this,
-                cameraSelector,
-                preview,
-                cameraCapture
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error: ${e.message}")
         }
 
-    }
-
-    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-        var permissionGranted = true
-        permissions.entries.forEach {
-            if (it.key in REQUIRED_PERMISSIONS && !it.value)
-                permissionGranted = false
-        }
-        if (!permissionGranted) {
-            Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show()
-        } else {
-            lifecycleScope.launch {
-                startCameraWithCameraCapture()
-            }
-        }
     }
 
     private fun takePhotos() {
@@ -119,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         for (i in 1..5) cameraCapture!!.takePicture(
             outputOption,
             Executors.newSingleThreadExecutor(),
-            object: ImageCapture.OnImageSavedCallback {
+            object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exception.message}", exception)
                 }
@@ -128,9 +83,14 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, outputFileResults.savedUri.toString())
                     Log.i("Take Picture", "onImageSaved: $i")
 
-                    val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/Dicom-Images/$name.jpg"
+                    val file =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).absolutePath + "/Dicom-Images/$name.jpg"
 
-                    DicomController().convertImageToDicom(getData(),  File(file), File(externalCacheDir!!.absolutePath + "/" + "$i.dcm"))
+                    DicomController().convertImageToDicom(
+                        getData(),
+                        File(file),
+                        File(externalCacheDir!!.absolutePath + "/" + "$i.dcm")
+                    )
 
                 }
 
@@ -159,6 +119,12 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
 
+    }
+
+    fun getDicomFiles(context: Context): List<File> {
+        val dcmFiles = ArrayList<File>()
+
+        return dcmFiles
     }
 
 }
