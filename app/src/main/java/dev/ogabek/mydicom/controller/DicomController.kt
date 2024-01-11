@@ -8,11 +8,11 @@ import org.dcm4che3.data.Attributes
 import org.dcm4che3.data.Tag
 import org.dcm4che3.data.UID
 import org.dcm4che3.data.VR
+import org.dcm4che3.io.DicomInputStream
 import org.dcm4che3.io.DicomOutputStream
 import org.dcm4che3.util.UIDUtils
 import java.io.File
 import java.util.Date
-import java.util.UUID
 
 class DicomController {
 
@@ -24,22 +24,23 @@ class DicomController {
 
             val bitmapImage = BitmapFactory.decodeFile(images[0].absolutePath) ?: return
 
-//            addInformation(data, bitmapImage, images.size)
-            addInformation(data, bitmapImage, 1)
+            addInformation(data, bitmapImage, images.size)
 
             val newAttribute = Attributes()
 
-            newAttribute.setString(Tag.ImplementationVersionName, VR.SH, "ImplementationVersionName")
+            newAttribute.setString(Tag.ImplementationVersionName, VR.SH, "1")
             newAttribute.setString(Tag.ImplementationClassUID, VR.UI, UIDUtils.createUID())
             newAttribute.setString(Tag.TransferSyntaxUID, VR.UI, UID.ExplicitVRLittleEndian)
             newAttribute.setString(Tag.MediaStorageSOPClassUID, VR.UI, UIDUtils.createUID())
             newAttribute.setString(Tag.MediaStorageSOPInstanceUID, VR.UI, UIDUtils.createUID())
             newAttribute.setInt(Tag.FileMetaInformationVersion, VR.OB, 1)
-            newAttribute.setInt(Tag.FileMetaInformationGroupLength, VR.UL, attributes.size() + newAttribute.size())
+            newAttribute.setInt(
+                Tag.FileMetaInformationGroupLength, VR.UL, attributes.size() + newAttribute.size()
+            )
 
             var pixelData: ByteArray? = null
 
-//            for (i in images) {
+            for (i in images) {
                 val bitmap = BitmapFactory.decodeFile(images.first().absolutePath)
 
                 val tempBytes = bitmapToRGB(bitmap)
@@ -52,8 +53,8 @@ class DicomController {
                     System.arraycopy(tempBytes, 0, newByteArray, pixelData.size, tempBytes.size)
                     newByteArray
                 }
-//
-//            }
+
+            }
 
             attributes.setBytes(Tag.PixelData, VR.OB, pixelData)
 
@@ -108,16 +109,16 @@ class DicomController {
         attributes.setDate(Tag.SeriesTime, VR.TM, Date())
 
         attributes.setString(Tag.AccessionNumber, VR.SH, UIDUtils.createUID())
-//        attributes.setString(Tag.Modality, VR.CS, "SC")
-//        attributes.setString(Tag.SpecificCharacterSet, VR.CS, "ISO_IR 100")
+        attributes.setString(Tag.Modality, VR.CS, "SC")
         attributes.setString(Tag.PhotometricInterpretation, VR.CS, "RGB")
-        attributes.setInt(Tag.SamplesPerPixel, VR.US, bitsPerPixel)
-//        attributes.setInt(Tag.Rows, VR.US, bitmapImage.height)
-//        attributes.setInt(Tag.Columns, VR.US, bitmapImage.width)
+        attributes.setInt(Tag.SamplesPerPixel, VR.US, 3)
+        attributes.setInt(Tag.Rows, VR.US, bitmapImage.height)
+        attributes.setInt(Tag.Columns, VR.US, bitmapImage.width)
         attributes.setInt(Tag.BitsAllocated, VR.US, bitsPerPixel)
         attributes.setInt(Tag.BitsStored, VR.US, bitsPerPixel)
         attributes.setInt(Tag.HighBit, VR.US, 7) // bitsPerPixel - 1
         attributes.setInt(Tag.PixelRepresentation, VR.US, 0)
+        attributes.setInt(Tag.PlanarConfiguration, VR.US, 0)
         attributes.setInt(Tag.NumberOfFrames, VR.IS, frames)
         attributes.setDate(Tag.InstanceCreationDate, VR.DA, Date())
         attributes.setDate(Tag.InstanceCreationTime, VR.TM, Date())
@@ -143,4 +144,61 @@ class DicomController {
         return data
     }
 
+}
+
+fun getAllDataFromDicom(dicomPath: String): AllData? {
+
+    var returnData: AllData? = null
+
+    try {
+        val dicomFile = File(dicomPath)
+
+        val dicomReader = DicomInputStream(dicomFile)
+        val attributes = dicomReader.readDataset()
+
+//            val rows = attributes.getInt(Tag.Rows, 1)
+//            val column = attributes.getInt(Tag.Columns, 1)
+
+        val pixelData = attributes.getBytes(Tag.PixelData)
+
+        val patientID = attributes.getString(Tag.PatientID)
+        val studyID = attributes.getString(Tag.StudyID)
+        val seriesID = attributes.getString(Tag.SeriesNumber)
+        val instanceID = attributes.getString(Tag.InstanceNumber)
+
+        val patientName = attributes.getString(Tag.PatientName)
+        val patientBirthDate = attributes.getDate(Tag.PatientBirthDate)
+        val patientSex = attributes.getString(Tag.PatientSex)
+        val patientAge = attributes.getString(Tag.PatientAge).toInt()
+
+        val doctorName = attributes.getString(Tag.PerformingPhysicianName)
+        val institutionName = attributes.getString(Tag.InstitutionName)
+        val institutionAddress = attributes.getString(Tag.InstitutionAddress)
+        val manufacturer = attributes.getString(Tag.Manufacturer)
+
+        val description = attributes.getString(Tag.StudyDescription)
+
+        returnData = AllData(
+            patientID ?: "",
+            studyID ?: "",
+            seriesID ?: "",
+            instanceID ?: "",
+            patientName ?: "",
+            patientBirthDate ?: Date(),
+            patientSex ?: "",
+            patientAge,
+            doctorName ?: "",
+            institutionName ?: "",
+            institutionAddress ?: "",
+            manufacturer ?: "",
+            description ?: ""
+        )
+
+        returnData.pixelData = pixelData
+
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    return returnData
 }

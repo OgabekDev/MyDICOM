@@ -2,7 +2,12 @@ package dev.ogabek.mydicom.utils
 
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.net.Uri
+import androidx.camera.core.ImageProxy
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -73,6 +78,7 @@ private fun copyInputStreamToFile(inputStream: InputStream, file: File) {
         }
     }
 }
+
 fun getFileSize(file: File): String {
     val fileSizeInBytes = file.length()
 
@@ -84,4 +90,28 @@ fun getFileSize(file: File): String {
         fileSizeInKB >= 1.0 -> String.format("%.2f KB", fileSizeInKB)
         else -> "$fileSizeInBytes Bytes"
     }
+}
+
+private fun yuvToJPEG(image: ImageProxy): ByteArray {
+    val yBuffer = image.planes[0].buffer
+    val uBuffer = image.planes[1].buffer
+    val vBuffer = image.planes[2].buffer
+
+    val ySize = yBuffer.remaining()
+    val uSize = uBuffer.remaining()
+    val vSize = vBuffer.remaining()
+
+    val nv21 = ByteArray(ySize + uSize + vSize)
+
+    // Copy Y
+    yBuffer.get(nv21, 0, ySize)
+    // Copy UV
+    vBuffer.get(nv21, ySize, vSize)
+    uBuffer.get(nv21, ySize + vSize, uSize)
+
+    val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
+    val outStream = ByteArrayOutputStream()
+    yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 100, outStream)
+
+    return outStream.toByteArray()
 }

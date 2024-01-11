@@ -8,7 +8,7 @@ import android.net.Uri
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-class PermissionController(private val context: Context, private val requestCode: Int) {
+class PermissionController(private val context: Context) {
 
     private val readStoragePermission = android.Manifest.permission.READ_EXTERNAL_STORAGE
     private val writeStoragePermission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -40,16 +40,16 @@ class PermissionController(private val context: Context, private val requestCode
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun askPermission(result: (Boolean) -> Unit) {
+    fun askPermission(): Boolean {
         if (!checkPermission()) {
             ActivityCompat.requestPermissions(
                 context as Activity,
-                arrayOf(readStoragePermission, writeStoragePermission),
-                requestCode
+                arrayOf(readStoragePermission, writeStoragePermission, cameraPermission),
+                777
             )
-            return result.invoke(false)
+            return false
         }
-        return result.invoke(true)
+        return true
     }
 
     fun openSettingsForPermission() {
