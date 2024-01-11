@@ -7,7 +7,7 @@ class MyDICOM: Application() {
     override fun onCreate() {
         super.onCreate()
 
-        System.loadLibrary("imebra_lib")
+
 
     }
 

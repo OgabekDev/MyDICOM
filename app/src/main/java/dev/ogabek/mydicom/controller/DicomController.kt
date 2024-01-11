@@ -99,6 +99,7 @@ class DicomController {
         attributes.setString(Tag.StudyDescription, VR.LO, data.description)
         attributes.setString(Tag.ContentDescription, VR.LO, data.description)
         attributes.setString(Tag.SeriesDescription, VR.LO, data.description)
+        attributes.setString(Tag.ImageComments, VR.LO, data.description)
 
         attributes.setDate(Tag.StudyDate, VR.DA, Date())
         attributes.setDate(Tag.ContentDate, VR.DA, Date())
@@ -153,13 +154,19 @@ fun getAllDataFromDicom(dicomPath: String): AllData? {
     try {
         val dicomFile = File(dicomPath)
 
+        if (!dicomFile.exists()) {
+            return null
+        }
+
         val dicomReader = DicomInputStream(dicomFile)
         val attributes = dicomReader.readDataset()
 
-//            val rows = attributes.getInt(Tag.Rows, 1)
-//            val column = attributes.getInt(Tag.Columns, 1)
+        val rows = attributes.getInt(Tag.Rows, 1)
+        val column = attributes.getInt(Tag.Columns, 1)
+        val samplesPerPixel = attributes.getInt(Tag.SamplesPerPixel, 1)
+        val numberOfFrames = attributes.getInt(Tag.NumberOfFrames, 1)
 
-        val pixelData = attributes.getBytes(Tag.PixelData)
+        val pixelData = attributes.getSafeBytes(Tag.PixelData)
 
         val patientID = attributes.getString(Tag.PatientID)
         val studyID = attributes.getString(Tag.StudyID)
@@ -176,7 +183,7 @@ fun getAllDataFromDicom(dicomPath: String): AllData? {
         val institutionAddress = attributes.getString(Tag.InstitutionAddress)
         val manufacturer = attributes.getString(Tag.Manufacturer)
 
-        val description = attributes.getString(Tag.StudyDescription)
+        val description = attributes.getString(Tag.ImageComments)
 
         returnData = AllData(
             patientID ?: "",
@@ -191,14 +198,61 @@ fun getAllDataFromDicom(dicomPath: String): AllData? {
             institutionName ?: "",
             institutionAddress ?: "",
             manufacturer ?: "",
-            description ?: ""
+            description ?: "",
+            rows,
+            column,
+            samplesPerPixel,
+            numberOfFrames,
+            pixelData
         )
-
-        returnData.pixelData = pixelData
 
     } catch (e: Exception) {
         e.printStackTrace()
     }
 
     return returnData
+}
+
+fun getImageBytesFromPixelData(bytes: ByteArray, numberOfFrames: Int, rows: Int, columns: Int, samplesPerPixel: Int): ArrayList<ByteArray> {
+
+    val images = ArrayList<ByteArray>()
+
+    repeat(numberOfFrames) {
+        try {
+
+            images.add(getSingleFrame(bytes, it, rows, columns, samplesPerPixel))
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    return images
+
+}
+
+private fun getSingleFrame(bytes: ByteArray, frameNumber: Int, rows: Int, columns: Int, samplesPerPixel: Int): ByteArray {
+
+    val frameSize = rows * columns * samplesPerPixel
+    val startPixel = frameNumber * frameSize
+    if (startPixel + frameSize <= bytes.size) {
+        val frameBytes = ByteArray(frameSize)
+        System.arraycopy(bytes, startPixel, frameBytes, 0, frameSize)
+        return frameBytes
+    }
+
+    return ByteArray(0)
+}
+
+fun convertByteArrayToBitmap(
+    bytes: ByteArray,
+    width: Int,
+    height: Int
+): Bitmap {
+    val argbPixels = IntArray(width * height)
+    for (i in argbPixels.indices) {
+        argbPixels[i] =
+            bytes[i * 3].toInt() and 255 shl 16 or -16777216 or (bytes[i * 3 + 1].toInt() and 255 shl 8) or (bytes[i * 3 + 2].toInt() and 255)
+    }
+    return Bitmap.createBitmap(argbPixels, width, height, Bitmap.Config.ARGB_8888)
 }

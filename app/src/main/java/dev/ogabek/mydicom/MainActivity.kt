@@ -2,16 +2,19 @@ package dev.ogabek.mydicom
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import dev.ogabek.mydicom.adapter.MyAdapter
+import dev.ogabek.mydicom.controller.DicomController
 import dev.ogabek.mydicom.controller.PermissionController
 import dev.ogabek.mydicom.controller.SharedPref
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.Dicom
+import dev.ogabek.mydicom.model.getData
 import dev.ogabek.mydicom.utils.getFileFromUri
 import dev.ogabek.mydicom.utils.getFileSize
 import java.io.File
@@ -87,28 +90,28 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnCreate.setOnClickListener {
 
-//            try {
-//                val images = ArrayList<File>().apply {
-//                    repeat(5) {
-//                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
-//                    }
-//                }
-//
-//                val data = getData()
-//                var dicom =
-//                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
-//                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
-//
-//                DicomController().convertImageToDicom(data, images, File(dicom))
-//
-//                pref.addPath(dicom)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            } finally {
-//                setAdapter()
-//            }
+            try {
+                val images = ArrayList<File>().apply {
+                    repeat(5) {
+                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
+                    }
+                }
 
-            startActivity(Intent(this, CameraActivity::class.java))
+                val data = getData()
+                var dicom =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
+                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
+
+                DicomController().convertImageToDicom(data, images, File(dicom))
+
+                pref.addPath(dicom)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                setAdapter()
+            }
+
+//            startActivity(Intent(this, CameraActivity::class.java))
         }
 
         binding.btnOpen.setOnClickListener {
@@ -148,10 +151,10 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1 && resultCode == RESULT_OK) {
             data?.data?.let {
                 val file = getFileFromUri(this, it)!!
-//                if (file.extension != "dcm") {
-//                    Toast.makeText(this, "This is not dicom file", Toast.LENGTH_SHORT).show()
-//                    return
-//                }
+                if (file.extension != "dcm") {
+                    Toast.makeText(this, "This is not dicom file", Toast.LENGTH_SHORT).show()
+                    return
+                }
                 pref.addPath(getFileFromUri(this, it)!!.absolutePath)
                 setAdapter()
                 Log.d(TAG, "onActivityResult: ")

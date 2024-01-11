@@ -24,7 +24,13 @@ data class AllData(
 
     // Picture
     val description: String,
-    var pixelData: ByteArray? = null
+
+    // Dicom Information
+    var row: Int = 0,
+    var column: Int = 0,
+    var samplesPerPixel: Int = 0,
+    var numberOfFrames: Int = 0,
+    var pixelData: ByteArray? = null,
 
 ) {
     override fun equals(other: Any?): Boolean {

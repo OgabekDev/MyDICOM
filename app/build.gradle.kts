@@ -66,7 +66,7 @@ dependencies {
 
     implementation(files("libs/dcm4che-core.jar", "libs/dcm4che-image.jar", "libs/dcm4che-imageio.jar", "libs/dcm4che-tool-jpg2dcm.jar", "libs/dcm4che-emf.jar"))
 
-    implementation(files("libs/imebrajni-release.aar"))
+//    implementation(files("libs/imebrajni-release.aar"))
 
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.github.bumptech.glide:glide:4.16.0")

@@ -29,22 +29,23 @@ class PermissionController(private val context: Context) {
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun checkPermissionStorage(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            readStoragePermission
-        ) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    writeStoragePermission
-                ) == PackageManager.PERMISSION_GRANTED
-    }
-
     fun askPermission(): Boolean {
         if (!checkPermission()) {
             ActivityCompat.requestPermissions(
                 context as Activity,
-                arrayOf(readStoragePermission, writeStoragePermission, cameraPermission),
+                arrayOf(readStoragePermission, writeStoragePermission),
+                777
+            )
+            return false
+        }
+        return true
+    }
+
+    fun askPermissionCamera(): Boolean {
+        if (!checkPermission()) {
+            ActivityCompat.requestPermissions(
+                context as Activity,
+                arrayOf(cameraPermission),
                 777
             )
             return false

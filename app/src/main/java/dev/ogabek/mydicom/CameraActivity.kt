@@ -24,7 +24,7 @@ class CameraActivity : AppCompatActivity() {
     private fun initViews() {
 
         if (!permissionController.checkPermission()) {
-            permissionController.askPermission()
+            permissionController.askPermissionCamera()
         }
 
         startCameraWithCameraController()
