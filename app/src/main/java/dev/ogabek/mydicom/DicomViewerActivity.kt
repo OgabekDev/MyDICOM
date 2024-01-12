@@ -42,11 +42,11 @@ class DicomViewerActivity : AppCompatActivity() {
             sheet.show(this)
         }
 
-        Runnable {
+        if (data.pixelData != null) Runnable {
             images.addAll(getImagesFromByteArray(data))
         }.run()
 
-        binding.imgDicom.setImageBitmap(images.first())
+        if (images.isNotEmpty()) binding.imgDicom.setImageBitmap(images.first())
 
         binding.sbImageChanger.max = data.numberOfFrames - 1
         binding.sbImageChanger.progress = 0

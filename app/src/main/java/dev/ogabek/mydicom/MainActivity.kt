@@ -2,19 +2,16 @@ package dev.ogabek.mydicom
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import dev.ogabek.mydicom.adapter.MyAdapter
-import dev.ogabek.mydicom.controller.DicomController
 import dev.ogabek.mydicom.controller.PermissionController
 import dev.ogabek.mydicom.controller.SharedPref
 import dev.ogabek.mydicom.databinding.ActivityMainBinding
 import dev.ogabek.mydicom.model.Dicom
-import dev.ogabek.mydicom.model.getData
 import dev.ogabek.mydicom.utils.getFileFromUri
 import dev.ogabek.mydicom.utils.getFileSize
 import java.io.File
@@ -90,28 +87,28 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnCreate.setOnClickListener {
 
-            try {
-                val images = ArrayList<File>().apply {
-                    repeat(5) {
-                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
-                    }
-                }
+//            try {
+//                val images = ArrayList<File>().apply {
+//                    repeat(5) {
+//                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
+//                    }
+//                }
+//
+//                val data = getData()
+//                var dicom =
+//                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
+//                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
+//
+//                DicomController().convertImageToDicom(data, images, File(dicom))
+//
+//                pref.addPath(dicom)
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            } finally {
+//                setAdapter()
+//            }
 
-                val data = getData()
-                var dicom =
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
-                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
-
-                DicomController().convertImageToDicom(data, images, File(dicom))
-
-                pref.addPath(dicom)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                setAdapter()
-            }
-
-//            startActivity(Intent(this, CameraActivity::class.java))
+            startActivity(Intent(this, CameraActivity::class.java))
         }
 
         binding.btnOpen.setOnClickListener {

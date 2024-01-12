@@ -2,11 +2,14 @@ package dev.ogabek.mydicom.utils
 
 import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.net.Uri
+import android.os.Environment
 import androidx.camera.core.ImageProxy
+import dev.ogabek.mydicom.model.Frames
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -114,4 +117,60 @@ private fun yuvToJPEG(image: ImageProxy): ByteArray {
     yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 100, outStream)
 
     return outStream.toByteArray()
+}
+
+private fun bitmapToJpegByteArray(bitmap: Bitmap): ByteArray? {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+    return byteArrayOutputStream.toByteArray()
+}
+
+private fun saveImage(bitmap: Bitmap, file: File) {
+    var fileOutputStream: FileOutputStream? = null
+    try {
+        fileOutputStream = FileOutputStream(file)
+        fileOutputStream.write(bitmapToJpegByteArray(bitmap))
+        fileOutputStream.close()
+    } catch (e: Exception) {
+        fileOutputStream?.close()
+        e.printStackTrace()
+    }
+}
+fun saveFramesAsImage(
+    patientID: String,
+    frames: List<Frames>,
+    onResult: (Boolean) -> Unit
+) {
+
+    try {
+
+        val documents =
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath)
+
+        if (!documents.exists())
+            documents.mkdir()
+
+        val mainLocation = documents.absolutePath + "/MyDICOM Files"
+        val patientFolder = "$mainLocation/$patientID"
+
+        val mainLocationFile = File(mainLocation)
+        val patientFolderFile = File(patientFolder)
+
+        if (!mainLocationFile.exists())
+            mainLocationFile.mkdir()
+
+        if (!patientFolderFile.exists())
+            patientFolderFile.mkdir()
+
+        for (i in frames.indices) {
+            saveImage(frames[i].imageFile, File(patientFolder + "/IMG_${patientID}_${i + 1}.jpg"))
+        }
+
+        onResult.invoke(true)
+
+    } catch (e: Exception) {
+        e.printStackTrace()
+        onResult.invoke(false)
+    }
+
 }
