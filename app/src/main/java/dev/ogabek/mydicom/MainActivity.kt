@@ -86,28 +86,6 @@ class MainActivity : AppCompatActivity() {
         setAdapter()
 
         binding.btnCreate.setOnClickListener {
-
-//            try {
-//                val images = ArrayList<File>().apply {
-//                    repeat(5) {
-//                        add(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/down.jpg"))
-//                    }
-//                }
-//
-//                val data = getData()
-//                var dicom =
-//                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath + "/DicomFiles/${data.patientID}.dcm"
-//                dicom = externalCacheDir!!.absolutePath + "/${data.patientID}.dcm"
-//
-//                DicomController().convertImageToDicom(data, images, File(dicom))
-//
-//                pref.addPath(dicom)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            } finally {
-//                setAdapter()
-//            }
-
             startActivity(Intent(this, CameraActivity::class.java))
         }
 
@@ -119,6 +97,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setAdapter() {
         binding.rvDicomFiles.adapter = MyAdapter(this, getDicomFiles(), onClick, onDelete)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setAdapter()
     }
 
     private fun getDicomFiles(): List<Dicom> {

@@ -18,7 +18,7 @@ class DicomController {
 
     private val attributes = Attributes()
 
-    fun convertImageToDicom(data: AllData, images: List<File>, dicom: File) {
+    fun convertImageToDicom(data: AllData, images: List<File>, dicom: File, onResult: (Boolean) -> Unit) {
 
         try {
 
@@ -65,11 +65,12 @@ class DicomController {
 
             dicomOutput.close()
 
-            Log.d("DicomController", "Conversion Done")
+            onResult.invoke(true)
 
         } catch (e: Exception) {
             Log.e("DicomController", "Error occurred ${e.message}")
             e.printStackTrace()
+            onResult.invoke(false)
         }
 
     }

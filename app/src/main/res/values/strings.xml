@@ -27,4 +27,7 @@
     <string name="str_manufacturer">Manufacturer</string>
     <string name="str_other_information">Other Informations</string>
     <string name="str_description">Patient Description</string>
+    <string name="_30_may_2004">30 May 2004</string>
+    <string name="save_the_informations">Save the informations</string>
+    <string name="generate_dicom">Generate Dicom File</string>
 </resources>

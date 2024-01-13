@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".DicomInformationActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputPatientName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_name"
+            android:layout_margin="5dp"
+            android:text="@string/ben_wilson" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputPatientDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_birthday"
+            android:layout_margin="5dp"
+            android:text="@string/_30_may_2004" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputPatientAge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_age"
+            android:layout_margin="5dp"
+            android:text="@string/_20" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputPatientSex"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_sex"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/male" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputDoctorName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_doctor_name"
+            android:layout_margin="5dp"
+            android:text="@string/ben_wilson" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputHospital"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_birthday"
+            android:layout_margin="5dp"
+            android:text="@string/str_hospital_name" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputHospitalAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_patient_age"
+            android:layout_margin="5dp"
+            android:text="@string/_20" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputManufacturer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_manufacturer"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/manufacturer" />
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/str_description"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_margin="25dp"
+        android:text="@string/generate_dicom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

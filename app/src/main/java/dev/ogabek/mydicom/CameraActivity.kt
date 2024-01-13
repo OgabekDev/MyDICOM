@@ -1,5 +1,6 @@
 package dev.ogabek.mydicom
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
@@ -44,18 +45,10 @@ class CameraActivity : AppCompatActivity() {
     private var imageDimension: Size? = null
     private var mBackgroundHandler: Handler? = null
     private var mBackgroundThread: HandlerThread? = null
-    private val ORIENTATIONS = SparseIntArray()
 
     private var isOpenTakePicture = false
     private var isPicturesDone: Boolean? = null
     private var patientID: String = ""
-
-    init {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90)
-        ORIENTATIONS.append(Surface.ROTATION_90, 0)
-        ORIENTATIONS.append(Surface.ROTATION_180, 270)
-        ORIENTATIONS.append(Surface.ROTATION_270, 180)
-    }
 
     private val frameBytes = ArrayList<Frames>()
 
@@ -110,10 +103,15 @@ class CameraActivity : AppCompatActivity() {
         if (isPicturesDone == true) {
             Toast.makeText(this, "Images Done", Toast.LENGTH_SHORT).show()
             Log.d(TAG, "convertSurfaceToImage: Saved")
+            val intent = Intent(this, DicomInformationActivity::class.java)
+            intent.putExtra("patientID", patientID)
+            startActivity(intent)
+            finish()
         } else if (isPicturesDone == false) {
             Toast.makeText(this, "Something went wrong when saving images", Toast.LENGTH_SHORT)
                 .show()
             Log.d(TAG, "convertSurfaceToImage: Not Saved")
+            finish()
         }
         isPicturesDone = null
 
