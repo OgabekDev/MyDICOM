@@ -76,10 +76,12 @@ class CameraActivity : AppCompatActivity() {
 
         if (isOpenTakePicture) {
 
-            if (frameBytes.size >= IMAGE_COUNT) {
+            if (frameBytes.size >= IMAGE_COUNT + 1) {
                 isOpenTakePicture = false
+                val frames = frameBytes
+                frames.removeAt(0)
                 GlobalScope.launch {
-                    saveFramesAsImage(patientID, frameBytes) {
+                    saveFramesAsImage(patientID, frames) {
                         isPicturesDone = it
                     }
                 }

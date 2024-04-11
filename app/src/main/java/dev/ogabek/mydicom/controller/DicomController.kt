@@ -41,7 +41,7 @@ class DicomController {
             var pixelData: ByteArray? = null
 
             for (i in images) {
-                val bitmap = BitmapFactory.decodeFile(images.first().absolutePath)
+                val bitmap = BitmapFactory.decodeFile(i.absolutePath)
 
                 val tempBytes = bitmapToRGB(bitmap)
 
